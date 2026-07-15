@@ -1,0 +1,28 @@
+services:
+  # Define our web application service
+  web:
+    # Build the image using the Dockerfile in the current directory (.)
+    build: .
+    
+    # Custom name for the running container
+    container_name: todo_container
+    
+    # Port mapping: host_port:container_port
+    # Makes the app accessible at http://localhost:8000
+    ports:
+      - "8000:8000"
+      
+    # Environment variables inside the container
+    environment:
+      - TODO_FILE=/app/data/todos.json
+      
+    # Mount the persistent named volume
+    volumes:
+      - todo_storage:/app/data
+      
+    # Automatically restart the container if it stops unexpectedly
+    restart: always
+
+# Define the named volume where Docker will persist the todos.json file
+volumes:
+  todo_storage:
