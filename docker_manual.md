@@ -131,6 +131,28 @@ docker compose down
 
 ---
 
+## Step 8: Pushing the Image to Docker Hub
+To share your Docker image with others or deploy it to a server, you can push it to a Docker registry like **Docker Hub**. Follow these step-by-step instructions:
+
+1. **Create a Docker Hub Account**: If you don't have one, sign up at [hub.docker.com](https://hub.docker.com/).
+2. **Login to Docker Hub via Terminal**:
+   ```bash
+   docker login
+   ```
+   *You will be prompted to enter your Docker Hub username and password (or a Personal Access Token).*
+3. **Tag your Image**: You must rename (tag) your image to include your Docker Hub username.
+   ```bash
+   docker tag my-first-todo <your_username>/my-first-todo:v1.0
+   ```
+   *(Replace `<your_username>` with your actual Docker Hub username).*
+4. **Push the Image**: Upload your tagged image to Docker Hub.
+   ```bash
+   docker push <your_username>/my-first-todo:v1.0
+   ```
+5. **Verify**: Go to your Docker Hub account in the browser, and you will see your new repository and image!
+
+---
+
 # 🛠️ THE ULTIMATE DOCKER COMMAND CHEAT SHEET
 
 Use this categorized reference guide during your lectures or when working on containers.
