@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor | ML & Flask API</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(22, 30, 49, 0.75);
+            --bg-card-hover: rgba(30, 41, 67, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-highlight: rgba(99, 102, 241, 0.4);
+            
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding-bottom: 60px;
+        }
+
+        /* Top Header Navigation */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            background: rgba(9, 13, 22, 0.85);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .logo-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-badges {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        /* Container Layout */
+        .container {
+            max-width: 1280px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        /* Nav Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            background: rgba(22, 30, 49, 0.6);
+            padding: 6px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 28px;
+            width: fit-content;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        /* Tab Contents */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Predictor Tab Grid Layout */
+        .predictor-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 992px) {
+            .predictor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        .card-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-description {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Presets Bar */
+        .preset-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preset-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--border-highlight);
+            transform: translateY(-2px);
+        }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .range-value {
+            color: var(--accent-cyan);
+            font-weight: 700;
+            font-size: 0.9rem;
+            background: rgba(6, 182, 212, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        /* Toggle Options Grid */
+        .toggle-group {
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-option {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .toggle-option.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* Predict CTA Button */
+        .submit-btn {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            border: none;
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(99, 102, 241, 0.5);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Prediction Result Panel */
+        .result-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px 0 10px;
+        }
+
+        .score-gauge {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin-bottom: 20px;
+        }
+
+        .score-circle-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.08);
+            stroke-width: 12;
+        }
+
+        .score-circle-val {
+            fill: none;
+            stroke: var(--accent-emerald);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 1s ease-out, stroke 0.5s ease;
+        }
+
+        .score-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-number {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text-main);
+        }
+
+        .score-max {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .grade-badge-lg {
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Recommendations Section */
+        .rec-section {
+            width: 100%;
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        .rec-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rec-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .rec-card.high {
+            border-left-color: var(--accent-rose);
+        }
+
+        .rec-card.medium {
+            border-left-color: var(--accent-amber);
+        }
+
+        .rec-item-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .rec-item-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Analytics Tab Grid */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-banner {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-banner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+        }
+
+        .stat-lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-val {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 4px;
+        }
+
+        /* Code & API Tab */
+        .api-block {
+            background: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 12px;
+            font-family: 'Fira Code', monospace, sans-serif;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo-group">
+            <div class="logo-icon">🎓</div>
+            <div>
+                <div class="logo-title">NeuralEdu Predictor</div>
+                <div class="logo-subtitle">Scikit-Learn Linear Regression • Flask API</div>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="badge"><div class="badge-dot"></div> Flask API Live</div>
+            <div class="badge">Dataset: 1,000 Students</div>
+            <div class="badge">Model R²: 0.48</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('predictor')">🎯 Score Predictor</button>
+            <button class="tab-btn" onclick="switchTab('analytics')">📊 Dataset Analytics</button>
+            <button class="tab-btn" onclick="switchTab('api-docs')">⚡ Flask API Docs</button>
+        </div>
+
+        <!-- TAB 1: PREDICTOR -->
+        <div id="tab-predictor" class="tab-content active">
+            <div class="predictor-grid">
+                
+                <!-- Left Input Form -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Student Profile & Inputs</div>
+                            <div class="card-description">Configure academic parameters to calculate predicted final exam score.</div>
+                        </div>
+                    </div>
+
+                    <!-- Preset Profiles Bar -->
+                    <div class="preset-group">
+                        <span style="font-size: 0.8rem; color: var(--text-dim); align-self: center; font-weight: 600;">Presets:</span>
+                        <button class="preset-btn" onclick="loadPreset('high_achiever')">🌟 High Achiever</button>
+                        <button class="preset-btn" onclick="loadPreset('average_student')">📚 Average Student</button>
+                        <button class="preset-btn" onclick="loadPreset('at_risk')">⚠️ At-Risk Student</button>
+                        <button class="preset-btn" onclick="loadPreset('working_student')">💼 Working Student</button>
+                    </div>
+
+                    <form id="predictionForm" onsubmit="handlePrediction(event)">
+                        <div class="form-grid">
+                            
+                            <!-- Study Time -->
+                            <div class="form-group full-width">
+                                <label>
+                                    <span>Weekly Study Hours (per day)</span>
+                                    <span id="studyValDisplay" class="range-value">4.0 hrs</span>
+                                </label>
+                                <input type="range" id="study_time_hours" min="0.5" max="10.0" step="0.1" value="4.0" oninput="updateRangeDisplay('studyValDisplay', this.value + ' hrs')">
+                            </div>
+
+                            <!-- Attendance Percent -->
+                            <div class="form-group full-width">
+                                <label>
+                                    <span>Class Attendance Rate</span>
+                                    <span id="attendanceValDisplay" class="range-value">85.0%</span>
+                                </label>
+                                <input type="range" id="attendance_percent" min="50.0" max="100.0" step="0.5" value="85.0" oninput="updateRangeDisplay('attendanceValDisplay', this.value + '%')">
+                            </div>
+
+                            <!-- Sleep Hours -->
+                            <div class="form-group full-width">
+                                <label>
+                                    <span>Sleep Duration</span>
+                                    <span id="sleepValDisplay" class="range-value">7.0 hrs</span>
+                                </label>
+                                <input type="range" id="sleep_hours" min="4.0" max="10.0" step="0.5" value="7.0" oninput="updateRangeDisplay('sleepValDisplay', this.value + ' hrs')">
+                            </div>
+
+                            <!-- Gender -->
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <div class="toggle-group" id="genderToggle">
+                                    <div class="toggle-option active" data-val="Male" onclick="setToggle('genderToggle', this)">Male</div>
+                                    <div class="toggle-option" data-val="Female" onclick="setToggle('genderToggle', this)">Female</div>
+                                </div>
+                            </div>
+
+                            <!-- Parental Education -->
+                            <div class="form-group">
+                                <label for="parental_education">Parental Education</label>
+                                <select id="parental_education">
+                                    <option value="High School">High School</option>
+                                    <option value="Bachelors" selected>Bachelor's Degree</option>
+                                    <option value="Masters">Master's Degree</option>
+                                    <option value="PhD">Doctorate / PhD</option>
+                                    <option value="None">None</option>
+                                </select>
+                            </div>
+
+                            <!-- Internet Access -->
+                            <div class="form-group">
+                                <label>Internet Access at Home</label>
+                                <div class="toggle-group" id="internetToggle">
+                                    <div class="toggle-option active" data-val="Yes" onclick="setToggle('internetToggle', this)">Yes</div>
+                                    <div class="toggle-option" data-val="No" onclick="setToggle('internetToggle', this)">No</div>
+                                </div>
+                            </div>
+
+                            <!-- Extracurricular Activities -->
+                            <div class="form-group">
+                                <label>Extracurricular Activities</label>
+                                <div class="toggle-group" id="extraToggle">
+                                    <div class="toggle-option active" data-val="Yes" onclick="setToggle('extraToggle', this)">Yes</div>
+                                    <div class="toggle-option" data-val="No" onclick="setToggle('extraToggle', this)">No</div>
+                                </div>
+                            </div>
+
+                            <!-- Part-time Job -->
+                            <div class="form-group full-width">
+                                <label>Part-time Job Status</label>
+                                <div class="toggle-group" id="jobToggle">
+                                    <div class="toggle-option active" data-val="No" onclick="setToggle('jobToggle', this)">No Job</div>
+                                    <div class="toggle-option" data-val="Yes" onclick="setToggle('jobToggle', this)">Employed Part-Time</div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <span class="spinner" id="btnSpinner"></span>
+                            <span id="btnText">✨ Predict Final Exam Score</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right Prediction Output Card -->
+                <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Prediction Results</div>
+                                <div class="card-description">Estimated score computed via Linear Regression model.</div>
+                            </div>
+                        </div>
+
+                        <div class="result-container">
+                            <!-- Circular Score Gauge -->
+                            <div class="score-gauge">
+                                <svg width="180" height="180" viewBox="0 0 160 160">
+                                    <circle class="score-circle-bg" cx="80" cy="80" r="70"></circle>
+                                    <circle id="scoreGaugeCircle" class="score-circle-val" cx="80" cy="80" r="70"></circle>
+                                </svg>
+                                <div class="score-inner">
+                                    <div id="predictedScoreNum" class="score-number">--</div>
+                                    <div class="score-max">OUT OF 100</div>
+                                </div>
+                            </div>
+
+                            <div id="gradeBadge" class="grade-badge-lg">
+                                <span>Grade: --</span>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations -->
+                        <div class="rec-section">
+                            <div class="rec-title">💡 Actionable Academic Recommendations</div>
+                            <div id="recList">
+                                <div style="font-size: 0.85rem; color: var(--text-dim); text-align: center; padding: 20px;">
+                                    Adjust inputs and click "Predict" to generate custom recommendations.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border-color); padding-top: 12px;">
+                        ⚡ Backend API Endpoint: <code style="color: var(--accent-cyan)">POST /api/predict</code>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: DATASET ANALYTICS -->
+        <div id="tab-analytics" class="tab-content">
+            
+            <!-- Summary Stats Banner -->
+            <div class="stat-banner" style="margin-bottom: 24px;">
+                <div class="stat-card">
+                    <div class="stat-lbl">Total Dataset Records</div>
+                    <div class="stat-val" id="statTotalStudents">1,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-lbl">Average Exam Score</div>
+                    <div class="stat-val" id="statAvgScore" style="color: var(--accent-cyan)">83.5%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-lbl">Min / Max Score Range</div>
+                    <div class="stat-val" id="statRange">42 - 100</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-lbl">Model Performance (R²)</div>
+                    <div class="stat-val" style="color: var(--accent-emerald)">0.48</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="analytics-grid">
+                <div class="glass-card">
+                    <div class="card-title">Grade Distribution (A - F)</div>
+                    <div style="height: 260px; margin-top: 16px;">
+                        <canvas id="gradeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">Study Time vs Average Score</div>
+                    <div style="height: 260px; margin-top: 16px;">
+                        <canvas id="studyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">Attendance Rate vs Score</div>
+                    <div style="height: 260px; margin-top: 16px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">Part-Time Job Impact</div>
+                    <div style="height: 260px; margin-top: 16px;">
+                        <canvas id="jobChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: API DOCS -->
+        <div id="tab-api-docs" class="tab-content">
+            <div class="glass-card">
+                <div class="card-title">⚡ Flask RESTful API Documentation</div>
+                <div class="card-description" style="margin-bottom: 20px;">
+                    Integrate the machine learning model predictions directly into external services or client apps.
+                </div>
+
+                <h3 style="font-size: 1rem; color: var(--text-main); margin-top: 20px;">1. Predict Student Score Endpoint</h3>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                    <code>POST /api/predict</code>
+                </div>
+                <div class="api-block">curl -X POST http://localhost:5000/api/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "study_time_hours": 5.5,
+    "attendance_percent": 92.0,
+    "sleep_hours": 7.5,
+    "gender": "Female",
+    "parental_education": "Bachelors",
+    "internet_access": "Yes",
+    "extracurricular_activities": "Yes",
+    "part_time_job": "No"
+  }'</div>
+
+                <h4 style="font-size: 0.9rem; color: var(--text-main); margin-top: 16px;">Example Response JSON:</h4>
+                <div class="api-block">{
+  "success": true,
+  "data": {
+    "predicted_score": 96.36,
+    "grade": "A",
+    "status": "Excellent",
+    "badge_color": "emerald",
+    "recommendations": [
+      {
+        "desc": "Your habits align strongly with top-tier academic performance!",
+        "priority": "low",
+        "title": "Keep Up the Outstanding Routine",
+        "type": "maintain"
+      }
+    ]
+  }
+}</div>
+
+                <h3 style="font-size: 1rem; color: var(--text-main); margin-top: 28px;">2. Dataset Analytics Endpoint</h3>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                    <code>GET /api/analytics</code>
+                </div>
+                <div class="api-block">curl http://localhost:5000/api/analytics</div>
+
+                <h3 style="font-size: 1rem; color: var(--text-main); margin-top: 28px;">3. Health & Model Metadata Endpoint</h3>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                    <code>GET /api/health</code>
+                </div>
+                <div class="api-block">curl http://localhost:5000/api/health</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Tab switching logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.currentTarget.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            if (tabId === 'analytics' && !window.chartsLoaded) {
+                fetchAnalyticsData();
+            }
+        }
+
+        // Toggle buttons active state handler
+        function setToggle(groupId, element) {
+            document.querySelectorAll(`#${groupId} .toggle-option`).forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function getToggleValue(groupId) {
+            const activeEl = document.querySelector(`#${groupId} .toggle-option.active`);
+            return activeEl ? activeEl.getAttribute('data-val') : 'Yes';
+        }
+
+        function updateRangeDisplay(id, valStr) {
+            document.getElementById(id).innerText = valStr;
+        }
+
+        // Load Preset Profiles
+        function loadPreset(profileKey) {
+            fetch('/api/presets')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.presets[profileKey]) {
+                        const p = data.presets[profileKey].data;
+                        document.getElementById('study_time_hours').value = p.study_time_hours;
+                        updateRangeDisplay('studyValDisplay', p.study_time_hours + ' hrs');
+
+                        document.getElementById('attendance_percent').value = p.attendance_percent;
+                        updateRangeDisplay('attendanceValDisplay', p.attendance_percent + '%');
+
+                        document.getElementById('sleep_hours').value = p.sleep_hours;
+                        updateRangeDisplay('sleepValDisplay', p.sleep_hours + ' hrs');
+
+                        document.getElementById('parental_education').value = p.parental_education;
+
+                        // Set toggles
+                        setToggleVal('genderToggle', p.gender);
+                        setToggleVal('internetToggle', p.internet_access);
+                        setToggleVal('extraToggle', p.extracurricular_activities);
+                        setToggleVal('jobToggle', p.part_time_job);
+
+                        // Trigger prediction
+                        document.getElementById('predictionForm').dispatchEvent(new Event('submit'));
+                    }
+                });
+        }
+
+        function setToggleVal(groupId, value) {
+            document.querySelectorAll(`#${groupId} .toggle-option`).forEach(el => {
+                if (el.getAttribute('data-val') === value) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        // Handle Prediction Submit
+        function handlePrediction(event) {
+            event.preventDefault();
+
+            const payload = {
+                study_time_hours: parseFloat(document.getElementById('study_time_hours').value),
+                attendance_percent: parseFloat(document.getElementById('attendance_percent').value),
+                sleep_hours: parseFloat(document.getElementById('sleep_hours').value),
+                gender: getToggleValue('genderToggle'),
+                parental_education: document.getElementById('parental_education').value,
+                internet_access: getToggleValue('internetToggle'),
+                extracurricular_activities: getToggleValue('extraToggle'),
+                part_time_job: getToggleValue('jobToggle')
+            };
+
+            const spinner = document.getElementById('btnSpinner');
+            const btnText = document.getElementById('btnText');
+
+            spinner.style.display = 'inline-block';
+            btnText.innerText = 'Calculating...';
+
+            fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(resData => {
+                spinner.style.display = 'none';
+                btnText.innerText = '✨ Predict Final Exam Score';
+
+                if (resData.success) {
+                    renderResults(resData.data);
+                } else {
+                    alert('Prediction Error: ' + resData.error);
+                }
+            })
+            .catch(err => {
+                spinner.style.display = 'none';
+                btnText.innerText = '✨ Predict Final Exam Score';
+                alert('Network Error: ' + err);
+            });
+        }
+
+        function renderResults(data) {
+            const score = data.predicted_score;
+            document.getElementById('predictedScoreNum').innerText = score.toFixed(1);
+
+            // Update gauge circle offset (radius=70, circumference=440)
+            const circumference = 440;
+            const offset = circumference - (score / 100) * circumference;
+            const gauge = document.getElementById('scoreGaugeCircle');
+            gauge.style.strokeDashoffset = offset;
+
+            // Color dynamic stroke
+            let strokeColor = '#10b981'; // Green
+            let badgeBg = 'rgba(16, 185, 129, 0.15)';
+            let badgeText = '#10b981';
+            let badgeBorder = 'rgba(16, 185, 129, 0.3)';
+
+            if (score < 60) {
+                strokeColor = '#f43f5e';
+                badgeBg = 'rgba(244, 63, 94, 0.15)';
+                badgeText = '#f43f5e';
+                badgeBorder = 'rgba(244, 63, 94, 0.3)';
+            } else if (score < 75) {
+                strokeColor = '#f59e0b';
+                badgeBg = 'rgba(245, 158, 11, 0.15)';
+                badgeText = '#f59e0b';
+                badgeBorder = 'rgba(245, 158, 11, 0.3)';
+            } else if (score < 85) {
+                strokeColor = '#3b82f6';
+                badgeBg = 'rgba(59, 130, 246, 0.15)';
+                badgeText = '#3b82f6';
+                badgeBorder = 'rgba(59, 130, 246, 0.3)';
+            }
+
+            gauge.style.stroke = strokeColor;
+
+            const badge = document.getElementById('gradeBadge');
+            badge.style.background = badgeBg;
+            badge.style.color = badgeText;
+            badge.style.borderColor = badgeBorder;
+            badge.innerHTML = `<span>Grade ${data.grade} • ${data.status}</span>`;
+
+            // Render Recommendations
+            const recList = document.getElementById('recList');
+            if (data.recommendations && data.recommendations.length > 0) {
+                recList.innerHTML = data.recommendations.map(rec => `
+                    <div class="rec-card ${rec.priority}">
+                        <div class="rec-item-title">${rec.title}</div>
+                        <div class="rec-item-desc">${rec.desc}</div>
+                    </div>
+                `).join('');
+            } else {
+                recList.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-muted)">No specific recommendations. Performance looks optimal!</div>';
+            }
+        }
+
+        // Fetch Analytics & Render Charts
+        function fetchAnalyticsData() {
+            fetch('/api/analytics')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const d = data.data;
+                        document.getElementById('statTotalStudents').innerText = d.total_students.toLocaleString();
+                        document.getElementById('statAvgScore').innerText = d.avg_score + '%';
+                        document.getElementById('statRange').innerText = `${d.min_score} - ${d.max_score}`;
+                        
+                        renderAnalyticsCharts(d);
+                        window.chartsLoaded = true;
+                    }
+                });
+        }
+
+        function renderAnalyticsCharts(data) {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#94a3b8', font: { family: 'Inter' } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            };
+
+            // Grade Chart
+            new Chart(document.getElementById('gradeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data.grade_distribution),
+                    datasets: [{
+                        data: Object.values(data.grade_distribution),
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+                }
+            });
+
+            // Study Time Chart
+            new Chart(document.getElementById('studyChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.study_vs_score),
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: Object.values(data.study_vs_score),
+                        backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Attendance Chart
+            new Chart(document.getElementById('attendanceChart'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(data.attendance_vs_score),
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: Object.values(data.attendance_vs_score),
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Part-time Job Chart
+            new Chart(document.getElementById('jobChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.job_vs_score).map(k => k === 'Yes' ? 'Part-Time Job' : 'No Job'),
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: Object.values(data.job_vs_score),
+                        backgroundColor: ['#3b82f6', '#f59e0b'],
+                        borderRadius: 6
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        // Run initial prediction on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('predictionForm').dispatchEvent(new Event('submit'));
+        });
+    </script>
+</body>
+</html>
