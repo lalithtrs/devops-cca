@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt
 COPY app.py .
 
 # Step 6: Inform Docker that the container listens on port 8000
-EXPOSE 8000
+EXPOSE 9000
 
 # Step 7: Define the command to run the application
 CMD ["python", "app.py"]

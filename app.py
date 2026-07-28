@@ -184,4 +184,4 @@ def delete(todo_id):
 
 if __name__ == "__main__":
     # Runs the server on port 5000 and accepts traffic from all network interfaces
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=9000)

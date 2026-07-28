@@ -10,19 +10,30 @@ services:
     # Port mapping: host_port:container_port
     # Makes the app accessible at http://localhost:8000
     ports:
-      - "8000:8000"
+      - "9000:9000"
       
     # Environment variables inside the container
     environment:
       - TODO_FILE=/app/data/todos.json
+      - FLASK_ENV=development
       
     # Mount the persistent named volume
     volumes:
       - todo_storage:/app/data
       
+    # Connect container to isolated custom network
+    networks:
+      - todo_net
+      
     # Automatically restart the container if it stops unexpectedly
     restart: always
+
+# Custom bridge network for container isolation
+networks:
+  todo_net:
+    driver: bridge
 
 # Define the named volume where Docker will persist the todos.json file
 volumes:
   todo_storage:
+    driver: local
