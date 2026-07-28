@@ -153,9 +153,9 @@ To share your Docker image with others or deploy it to a server, you can push it
 
 ---
 
-## Step 9: Real-World Case Study: Building & Dockerizing a Machine Learning Application (`mlapp`)
+## Step 9: Real-World Case Study: Building & Dockerizing a Machine Learning Application (`mlapp` / NeuralEdu Predictor)
 
-In this real-world example, we build and containerize a **Student Performance Predictor** using Python, scikit-learn, Flask, Gunicorn, and Docker. The machine learning model predicts student final exam scores based on study habits, attendance, and demographics.
+In this real-world example, we build and containerize **NeuralEdu Predictor** (a Student Performance Predictor ML application) using Python, scikit-learn, Flask, Gunicorn, and Docker. The machine learning model predicts student final exam scores based on study habits, attendance, and demographics.
 
 ### 📁 Application File Structure
 

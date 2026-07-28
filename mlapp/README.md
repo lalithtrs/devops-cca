@@ -1,8 +1,8 @@
-# 🎓 Student Performance Predictor (ML & Flask Web App)
+# 🎓 NeuralEdu Predictor (Student Performance Predictor ML App)
 
 A full-stack, containerized Machine Learning web application that predicts student final exam scores based on study habits, attendance, sleep, and demographic factors. Built using **Python**, **scikit-learn**, **Flask**, **Gunicorn**, and **Docker**.
 
-![App Preview](static/app_preview.png)
+![NeuralEdu Predictor Preview](static/app_preview.png)
 
 ---
 
