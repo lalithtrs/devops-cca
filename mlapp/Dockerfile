@@ -4,17 +4,21 @@ FROM python:3.11-slim
 # Set environment variables for Python performance and output buffering
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=5000
+    PORT=5000 \
+    PYTHONPATH=/app/src
 
 # Set working directory inside container
 WORKDIR /app
 
-# Install system dependencies if required and Python dependencies
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files and dataset into container
-COPY app.py model_pipeline.py dataset.csv ./
+# Copy application directories into container
+COPY data/ ./data/
+COPY models/ ./models/
+COPY src/ ./src/
+COPY static/ ./static/
 COPY templates/ ./templates/
 
 # Create a non-root user for security compliance
@@ -29,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
 
 # Start production application server with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "src.app:app"]

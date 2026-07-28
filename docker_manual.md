@@ -161,16 +161,25 @@ In this real-world example, we build and containerize a **Student Performance Pr
 
 ```text
 mlapp/
-├── dataset.csv            # 📊 Historical student dataset (1,000 student records)
-├── notebook.ipynb         # 📓 Data exploration & ML prototyping notebook
-├── model_pipeline.py      # 🤖 Data preprocessing, model training, & inference logic
-├── app.py                 # 🌐 Flask Web Application & REST API endpoints
-├── requirements.txt       # 📦 Python package dependencies
+├── data/                  # 📊 Data folder
+│   └── dataset.csv        # Historical student dataset (1,000 records)
+├── models/                # 🤖 Serialized ML models & pipelines
+│   ├── linear_model.pkl   # Trained scikit-learn LinearRegression model
+│   └── pipeline.joblib    # Exported pipeline dictionary (model, scaler, metrics)
+├── notebooks/             # 📓 Exploratory notebooks
+│   └── notebook.ipynb     # Data exploration & initial ML prototyping
+├── src/                   # 🌐 Application source code
+│   ├── __init__.py
+│   ├── app.py             # Flask Web Application & REST API endpoints
+│   └── model_pipeline.py  # Data preprocessing, training, & inference logic
+├── static/                # 🖼️ Static assets
+│   └── app_preview.png    # Preview screenshot
+├── templates/             # 🎨 Web UI templates
+│   └── index.html         # Interactive dashboard UI (Glassmorphic dark theme)
+├── .dockerignore          # 🙈 Excluded files from Docker build context
 ├── Dockerfile             # 🐳 Production container build recipe (Gunicorn & non-root user)
 ├── docker-compose.yml     # 🐙 Multi-container service orchestrator setup
-├── .dockerignore          # 🙈 Excluded files from Docker build context
-└── templates/
-    └── index.html         # 🎨 Interactive dashboard UI (Glassmorphic dark theme)
+└── requirements.txt       # 📦 Python package dependencies
 ```
 
 ---
@@ -181,19 +190,19 @@ The diagram below illustrates how requests flow through the containerized archit
 
 ```mermaid
 flowchart TD
-    User([👤 User / Browser]) -->|1. Accesses http://localhost:5000| WebUI[🎨 Flask Web UI / index.html]
-    User -->|2. Submits Student Inputs JSON| API Endpoint[🌐 POST /api/predict]
+    User([👤 User / Browser]) -->|1. Accesses http://localhost:5000| WebUI[🎨 Flask Web UI / templates/index.html]
+    User -->|2. Submits Student Inputs JSON| API Endpoint[🌐 POST /api/predict in src/app.py]
 
     subgraph Container ["🐳 Docker Container (flask_ml_app)"]
         WSGI[⚙️ Gunicorn WSGI Server]
         WebUI
         API Endpoint
 
-        API Endpoint -->|3. Calls predict_student_score| Pipeline[🤖 model_pipeline.py]
+        API Endpoint -->|3. Calls predict_student_score| Pipeline[🤖 src/model_pipeline.py]
 
         subgraph MLEngine ["🧠 Machine Learning Inference Engine"]
             Pipeline -->|4. Categorical Encoding| Dummies[Categorical One-Hot Encoding]
-            Dummies -->|5. Feature Scaling| Scaler[StandardScaler]
+            Dummies -->|5. Feature Scaling| Scaler[StandardScaler from models/pipeline.joblib]
             Scaler -->|6. Formatted Inputs| Model[LinearRegression Model]
             Model -->|7. Predicts Score| Recommendations[Grade & Insights Generator]
         end
@@ -208,41 +217,50 @@ flowchart TD
 
 ### 🔨 Step-by-Step Implementation Guide
 
-#### 1️⃣ Step 1: Create the ML Pipeline (`model_pipeline.py`)
-Develop a clean pipeline module that trains a `LinearRegression` model using `pandas` and `scikit-learn` on `dataset.csv`, then exports the model and scaler artifacts:
+#### 1️⃣ Step 1: Create the ML Pipeline (`src/model_pipeline.py`)
+Develop a clean pipeline module that trains a `LinearRegression` model using `pandas` and `scikit-learn` on `data/dataset.csv`, then exports the model and scaler artifacts to `models/`:
 
 ```python
-# model_pipeline.py (Key Logic)
-import joblib, pandas as pd
+# src/model_pipeline.py (Key Logic)
+import os, joblib, pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_FILE = os.path.join(BASE_DIR, 'data', 'dataset.csv')
+PIPELINE_FILE = os.path.join(BASE_DIR, 'models', 'pipeline.joblib')
+
 def train_and_save_pipeline():
-    df = pd.read_csv('dataset.csv')
+    df = pd.read_csv(DATASET_FILE)
     X = df[['study_time_hours', 'attendance_percent', 'sleep_hours', 
             'gender', 'parental_education', 'internet_access', 
             'extracurricular_activities', 'part_time_job']]
     y = df['final_exam_score']
 
-    # Preprocessing with Categorical mapping and StandardScaler
     X_dummies = pd.get_dummies(X, drop_first=True)
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X_dummies)
 
     model = LinearRegression()
     model.fit(X_scaled, y)
-    joblib.dump({'model': model, 'scaler': scaler}, 'pipeline.joblib')
+    joblib.dump({'model': model, 'scaler': scaler}, PIPELINE_FILE)
 ```
 
-#### 2️⃣ Step 2: Build the Flask Server & UI (`app.py` & `templates/index.html`)
+#### 2️⃣ Step 2: Build the Flask Server & UI (`src/app.py` & `templates/index.html`)
 Build Flask REST API endpoints (`/api/predict`, `/api/analytics`, `/api/health`) and render the dashboard interface:
 
 ```python
-# app.py
+# src/app.py
+import os, sys
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, 'src'))
+
 from flask import Flask, render_template, request, jsonify
 from model_pipeline import predict_student_score, load_pipeline
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder=os.path.join(BASE_DIR, 'templates'),
+            static_folder=os.path.join(BASE_DIR, 'static'))
 load_pipeline()
 
 @app.route('/')
@@ -279,17 +297,20 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=5000
+    PORT=5000 \
+    PYTHONPATH=/app/src
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py model_pipeline.py dataset.csv ./
+COPY data/ ./data/
+COPY models/ ./models/
+COPY src/ ./src/
+COPY static/ ./static/
 COPY templates/ ./templates/
 
-# Non-root user for container security
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
@@ -298,7 +319,7 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "src.app:app"]
 ```
 
 #### 5️⃣ Step 5: Configure Docker Compose (`docker-compose.yml`)

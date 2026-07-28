@@ -1,8 +1,19 @@
 import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR = os.path.join(BASE_DIR, 'src')
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
 from flask import Flask, render_template, request, jsonify
 from model_pipeline import predict_student_score, get_dataset_analytics, load_pipeline
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 
 # Ensure pipeline is loaded or trained at startup
 try:

@@ -6,8 +6,16 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-MODEL_FILE = 'linear_model.pkl'
-PIPELINE_FILE = 'pipeline.joblib'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+MODEL_DIR = os.path.join(BASE_DIR, 'models')
+
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+DATASET_FILE = os.path.join(DATA_DIR, 'dataset.csv')
+MODEL_FILE = os.path.join(MODEL_DIR, 'linear_model.pkl')
+PIPELINE_FILE = os.path.join(MODEL_DIR, 'pipeline.joblib')
 
 FEATURE_COLS = [
     'study_time_hours', 'attendance_percent', 'sleep_hours',
@@ -32,10 +40,10 @@ def preprocess_df(df_input):
     return dummies
 
 def train_and_save_pipeline():
-    if not os.path.exists('dataset.csv'):
-        raise FileNotFoundError("dataset.csv not found")
+    if not os.path.exists(DATASET_FILE):
+        raise FileNotFoundError(f"{DATASET_FILE} not found")
 
-    df = pd.read_csv('dataset.csv')
+    df = pd.read_csv(DATASET_FILE)
     df = df.fillna('None')
 
     # Check categories from data
@@ -200,10 +208,10 @@ def predict_student_score(input_data):
     }
 
 def get_dataset_analytics():
-    if not os.path.exists('dataset.csv'):
+    if not os.path.exists(DATASET_FILE):
         return {}
 
-    df = pd.read_csv('dataset.csv')
+    df = pd.read_csv(DATASET_FILE)
     
     # Grade distribution
     grade_counts = df['final_grade'].value_counts().to_dict()
