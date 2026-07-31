@@ -1,0 +1,14 @@
+Create folder CCABank in your desktop or any other location.
+https://github.com/JohnPhilip80/CCABank
+	Code -> Download Zip.
+unzip and copy the MyProject folder into CCABank folder.
+Open MySql workbench
+	Copy sql script from Dump.sql from github. Run the sql queries in MySql. 
+	This will create the Database(db_cca_bank), tables with data.
+Open Pycharm
+	File -> New Project -> Location -> CCABank -> Create button.
+	CCABank -> MyProject -> MyProject -> settings.py -> DATABASES -> 'Password' (give ur mysql password).
+	Terminal -> pip install Django
+	Terminal -> pip install django mysqlclient
+	Terminal -> cd MyProject
+	Terminal -> python manage.py runserver

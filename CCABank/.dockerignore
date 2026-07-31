@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+db.sqlite3
+.vscode/
+.idea/
+.project
+.pydevproject
+.settings/
+*.log
+*.zip
+*.tar.gz
+*.sql

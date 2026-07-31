@@ -1,0 +1,16 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}CCA Bank - Home {% endblock %}
+{% block content %}
+    <h1 class="text-center">{{welcome_message}}</h1>
+    <form method="POST">
+        <input type="hidden" name="token_csrf" value="{{ csrf_token }}">
+        <button class="btn btn-primary" type="submit">Show Balance</button>
+    </form>
+    {% if balance_amount is not None %}
+        <h3>Your Balance: {{ balance_amount }}</h3>
+    {% endif %}
+    <div style="display: flex; justify-content: center; align-items: center; height: 400px;">
+        <img src="{% static 'bankapp/images/CCABank.jpg' %}" alt="CCA Bank">
+    </div>
+{% endblock %}

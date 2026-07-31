@@ -1,0 +1,48 @@
+<header>
+	<nav class="navbar navbar-expand-sm bg-primary navbar-dark">
+	    <ul class = "navbar-nav ml-auto">
+	        <li class = "nav-item">
+	            <a href="{% url 'bhomepage' %}" class="navbar-brand"> CCA Bank </a>
+	        </li>
+
+            <li class = "nav-item">
+	           <a href="{% url 'blistaccount' %}" class="nav-link" >Accounts Types</a>
+	       </li>
+
+            {% if user_role == "ROLE_ADMIN" %}
+            <li class = "nav-item">
+	           <a href="{% url 'baddaccount' %}" class="nav-link" >Add Account</a>
+	       </li>
+            {% endif %}
+            {% if user_role == "ROLE_CUSTOMER" %}
+            <li class = "nav-item">
+	           <a href="{% url 'busertransaction' %}" class="nav-link" >Transaction</a>
+	       </li>
+            <li class = "nav-item">
+	           <a href="{% url 'buserfeedback' %}" class="nav-link" >Feedback</a>
+	       </li>
+            {% endif %}
+	    </ul>
+	    <ul class = "navbar-nav ms-auto">
+	        <li class = "nav-item">
+	            <a href="{% url 'baboutus' %}" class="nav-link">About Us</a>
+	        </li>
+	        <li class = "nav-item">
+	            <a href="{% url 'bcontactus' %}" class="nav-link" >Contact Us</a>
+	        </li>
+
+            {% if request.COOKIES.SESSION_ID %}
+            <li class = "nav-item">
+	            <a href="{% url 'buserlogout' %}" class="nav-link" >Logout</a>
+	        </li>
+            {% else %}
+            <li class = "nav-item">
+	            <a href="{% url 'buserregister' %}" class="nav-link" >Register</a>
+	        </li>
+            <li class = "nav-item">
+	            <a href="{% url 'buserlogin' %}" class="nav-link" >Login</a>
+	        </li>
+            {% endif %}
+		</ul>
+	</nav>
+</header>

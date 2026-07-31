@@ -1,0 +1,16 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}CCA Bank - Transaction {% endblock %}
+{% block content %}
+    <h1 class="text-center">Transaction</h1>
+    <div class="container mt-5">
+        <div class="card" style="padding: 20px;">
+            <form action="{% url 'busertransaction' %}" method="post">
+                <input type="hidden" name="token_csrf" value="{{ csrf_token }}">
+                <input type="text" class="form-control mb-3" name="to_user" placeholder="Enter User Name to Send Money">
+                <input type="text" class="form-control mb-3" name="transfer_amount" placeholder="Enter Amount to transfer">
+                <input type="submit" class="btn btn-outline-primary form-control rounded-0" value="Transfer">
+            </form>
+        </div>
+    </div>
+{% endblock %}

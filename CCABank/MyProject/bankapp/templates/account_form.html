@@ -1,0 +1,34 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}CCA Bank - {{ form_title }} {% endblock %}
+{% block content %}
+    <!--suppress ALL -->
+<h1 class="text-center">{{ form_title }}</h1>
+    <form action="{% if account %}
+                    {% url 'bupdateaccount' account.id  %}
+                  {% else %}
+                    {% url 'baddaccount' %}
+                  {% endif %}" method="POST">
+        <div class="form-group">
+            <label> Id:
+                <input readonly type="text" class ="form-control" name = "aid" value="{{ account.id }}">
+            </label>
+        </div>
+        <div class="form-group">
+            <label> Type Name:
+                <input type="text" class ="form-control" name = "type_name" value="{{ account.type_name }}">
+            </label>
+        </div>
+        <div class="form-group">
+            <label> Rate of Interest:
+                <input type="text" class ="form-control" name = "rate_of_interest" value="{{account.rate_of_interest}}">
+            </label>
+        </div>
+        <div class="form-group">
+            <label> Year Launched :
+                <input type="text" class ="form-control" name = "year_launched" value="{{account.year_launched}}">
+            </label>
+        </div>
+        <button class="btn btn-success" type="submit">Submit</button>
+    </form>
+{% endblock %}

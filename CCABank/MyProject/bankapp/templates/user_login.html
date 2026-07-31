@@ -1,0 +1,15 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}CCA Bank - User Login {% endblock %}
+{% block content %}
+    <h1 class="text-center">User Login</h1>
+    <div class="container mt-5">
+        <div class="card" style="padding: 20px;">
+            <form action="{% url 'buserlogin' %}" method="POST">
+                <input type="text" class="form-control mb-3" name="login_name" placeholder="Enter User Name">
+                <input type="password" class="form-control mb-3" name="login_password" placeholder="Enter Password">
+                <input type="submit" class="btn btn-outline-primary form-control rounded-0" value="Login">
+            </form>
+        </div>
+    </div>
+{% endblock %}

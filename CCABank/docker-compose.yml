@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: cca_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Admin@123
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./Dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - cca_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pAdmin@123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cca_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=db_cca_bank
+      - DB_USER=root
+      - DB_PASSWORD=Admin@123
+      - DB_HOST=db
+      - DB_PORT=3306
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  cca_db_data:

@@ -1,0 +1,22 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}CCA Bank - Feedback {% endblock %}
+{% block content %}
+    <div style="display:flex;height: 100vh;">
+      <div style="flex:1; padding:20px;">
+          <h1>User Feedback</h1>
+        <form action="{% url 'buserfeedback' %}" method="post">
+            <textarea name="user_comment" rows="4" cols="68"></textarea><br/><br/>
+            <input type="submit" class="btn btn-outline-primary form-control rounded-0" value="Send"/>
+        </form>
+      </div>
+      <div style="flex:1; padding:20px;">
+        <h1>All Feedbacks</h1>
+        <h3>
+            {% autoescape off %}
+                {{ user_comments }}
+            {% endautoescape %}
+        </h3>
+      </div>
+    </div>
+{% endblock %}
