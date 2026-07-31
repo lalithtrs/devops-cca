@@ -96,10 +96,6 @@ Contributions are welcome. To contribute:
 
 Please follow any course-specific contribution guidelines if provided by the instructor.
 
-## License
-
-If this repository has a preferred license, add it here (e.g. MIT, CC-BY). If no license is specified, contact the repository owner (see Contact below).
-
 ## Contact
 
 Maintainer: lalithtrs
