@@ -18,7 +18,7 @@ app = Flask(
 # Ensure pipeline is loaded or trained at startup
 try:
     load_pipeline()
-    print("ML Pipeline loaded successfully.")
+    print("Model Pipeline loaded successfully.")
 except Exception as e:
     print(f"Error loading pipeline: {e}")
 
