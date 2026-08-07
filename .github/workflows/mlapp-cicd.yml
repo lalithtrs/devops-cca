@@ -2,12 +2,12 @@ name: NeuralEdu Predictor CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, Main ]
     paths:
       - 'mlapp/**'
       - '.github/workflows/mlapp-cicd.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ main, Main ]
     paths:
       - 'mlapp/**'
       - '.github/workflows/mlapp-cicd.yml'
@@ -110,7 +110,7 @@ jobs:
     name: Build & Push to Docker Hub
     needs: build-and-validate-docker
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/Main') && github.event_name == 'push'
 
     steps:
       - name: Checkout Code
