@@ -1,0 +1,19 @@
+services:
+  llm-cpu-inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local-llm-cpu:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount your local folder containing the massive .gguf file into the container
+      - ./local_models:/app/models 
+    environment:
+      - MODEL_FILE=/app/models/model.gguf
+    # LLMs will crash if they run out of RAM. It is wise to set limits.
+    deploy:
+      resources:
+        limits:
+          memory: 16G 
+    restart: unless-stopped
