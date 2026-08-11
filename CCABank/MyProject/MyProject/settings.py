@@ -87,8 +87,8 @@ DATABASES = {
     }
 }
 
-# Override database settings for unit testing to avoid MySQL dependency in CI/CD pipeline
-if 'test' in sys.argv:
+# Override database settings for unit testing or container smoke validation
+if 'test' in sys.argv or os.environ.get('USE_SQLITE') == 'True':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

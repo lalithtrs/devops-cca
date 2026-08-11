@@ -198,12 +198,12 @@ GitHub Actions looks for YAML configuration files in the `.github/workflows/` di
    
    on:
      push:
-       branches: [ main ]
+       branches: [ main, Main ]
        paths:
          - 'CCABank/**'
          - '.github/workflows/ccabank-cicd.yml'
      pull_request:
-       branches: [ main ]
+       branches: [ main, Main ]
        paths:
          - 'CCABank/**'
          - '.github/workflows/ccabank-cicd.yml'
@@ -226,8 +226,8 @@ GitHub Actions looks for YAML configuration files in the `.github/workflows/` di
          - name: Set up Python
            uses: actions/setup-python@v5
            with:
-             python-version: '3.11'
-             cache: 'pip'
+             python-version: "3.11"
+             cache: "pip"
    
          - name: Install Dependencies
            run: |
@@ -244,7 +244,7 @@ GitHub Actions looks for YAML configuration files in the `.github/workflows/` di
    
          - name: Run Django Tests
            run: |
-             python MyProject/manage.py test MyProject/
+             python MyProject/manage.py test bankapp
    
      # ========================================================
      # JOB 2: DOCKER IMAGE BUILD & SMOKE TEST (CI Stage 2)
@@ -275,10 +275,10 @@ GitHub Actions looks for YAML configuration files in the `.github/workflows/` di
    
          - name: Start Docker Container (Smoke Test)
            run: |
-             # Spin up container on port 8000
-             docker run -d --name ccabank_test -p 8000:8000 ccabank:local
+             # Spin up container on port 8000 with SQLite fallback enabled
+             docker run -d --name ccabank_test -e USE_SQLITE=True -p 8000:8000 ccabank:local
              echo "Waiting for Django server to bind..."
-             sleep 5
+             sleep 10
    
          - name: Run Smoke Test API Validation
            run: |
@@ -306,7 +306,7 @@ GitHub Actions looks for YAML configuration files in the `.github/workflows/` di
        needs: build-and-validate-docker
        runs-on: ubuntu-latest
        # Execute ONLY when changes are merged/pushed directly to the main branch
-       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+       if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/Main') && github.event_name == 'push'
    
        steps:
          - name: Checkout Code

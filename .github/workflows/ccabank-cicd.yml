@@ -73,10 +73,10 @@ jobs:
 
       - name: Start Docker Container (Smoke Test)
         run: |
-          # Spin up container on port 8000
-          docker run -d --name ccabank_test -p 8000:8000 ccabank:local
+          # Spin up container on port 8000 with SQLite fallback enabled
+          docker run -d --name ccabank_test -e USE_SQLITE=True -p 8000:8000 ccabank:local
           echo "Waiting for Django server to bind..."
-          sleep 5
+          sleep 10
 
       - name: Run Smoke Test API Validation
         run: |
