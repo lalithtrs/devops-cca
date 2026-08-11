@@ -24,6 +24,14 @@ class MLAppTestCase(unittest.TestCase):
         self.assertIn('model_type', data)
         self.assertIn('metrics', data)
 
+    def login(self):
+        response = self.app.get("127.0.0.1:8000/bank")
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['success'], "Login Success")
+        self.assertIn('model_type', data)
+        self.assertIn('metrics', data)
+
     def test_presets_endpoint(self):
         """Test that /api/presets returns the predefined student profiles."""
         response = self.app.get('/api/presets')
