@@ -1,9 +1,6 @@
 version: 2.1
 
 jobs:
-  # ========================================================
-  # JOB 1: LINT & RUN TESTS
-  # ========================================================
   lint-and-test:
     docker:
       - image: cimg/python:3.11
@@ -37,9 +34,6 @@ jobs:
           command: |
             python MyProject/manage.py test bankapp
 
-  # ========================================================
-  # JOB 2: DOCKER BUILD & SMOKE TEST
-  # ========================================================
   build-and-validate-docker:
     machine:
       image: ubuntu-2204:current
@@ -97,16 +91,16 @@ jobs:
               echo "Error: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN is not defined in CircleCI Environment Variables."
               exit 1
             fi
-            
+
             # Log in to Docker Hub
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            
+
             # Generate short SHA tag
             SHORT_SHA=$(echo $CIRCLE_SHA1 | cut -c1-7)
-            
+
             # Build and tag
             docker build -t $DOCKERHUB_USERNAME/ccabank:latest -t $DOCKERHUB_USERNAME/ccabank:sha-$SHORT_SHA .
-            
+
             # Push tags
             docker push $DOCKERHUB_USERNAME/ccabank:latest
             docker push $DOCKERHUB_USERNAME/ccabank:sha-$SHORT_SHA
