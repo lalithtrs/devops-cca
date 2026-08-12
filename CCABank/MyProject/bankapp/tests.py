@@ -19,3 +19,19 @@ class BankAppTests(TestCase):
         response = self.client.get('/bank/about-us')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "About Us")
+
+    @patch('bankapp.db_repository.getuser')
+    @patch('bankapp.db_repository.getuserbalance')
+    @patch('bankapp.db_repository.validatecsrftoken')
+    def check_balance(self, mock_validatecsrftoken, mock_getuserbalance, mock_getuser):
+        mock_getuser.return_value = {"login_name": "Gokul", "role_name": "ROLE_PUBLIC", "token": "valid-csrf-token-123"}
+        mock_validatecsrftoken.return_value = True
+        mock_getuserbalance.return_value = {"balance_amount": 5000}
+        self.client.cookies["SESSION_ID"] = "active-session-uuid"
+        response = self.client.post("/bank/", {"token_csrf": "valid-csrf-token-123"})
+        self.assertEqual(response.status_code, 200)
+        mock_validatecsrftoken.assert_called_once_with("valid-csrf-token-123", "active-session-uuid")
+        mock_getuserbalance.assert_called_once_with("active-session-uuid")
+        self.assertEqual(response.context["balance_amount"], 5000)
+        self.assertContains(response, "5000")
+
