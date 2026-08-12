@@ -86,10 +86,11 @@ jobs:
       - run:
           name: Build and Push Docker Image
           command: |
-            # Ensure Docker Hub credentials are set
+            # Skip push gracefully when Docker Hub credentials are not configured
             if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
-              echo "Error: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN is not defined in CircleCI Environment Variables."
-              exit 1
+              echo "WARNING: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN is not set in CircleCI Environment Variables."
+              echo "Skipping Docker Hub push. Configure these secrets in CircleCI Project Settings > Environment Variables to enable publishing."
+              exit 0
             fi
 
             # Log in to Docker Hub
