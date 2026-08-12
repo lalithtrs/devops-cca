@@ -1,0 +1,135 @@
+version: 2.1
+
+jobs:
+  # ========================================================
+  # JOB 1: LINT & RUN TESTS
+  # ========================================================
+  lint-and-test:
+    docker:
+      - image: cimg/python:3.11
+    working_directory: ~/project/CCABank
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            - v1-dependencies-
+      - run:
+          name: Install Dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install flake8
+            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - save_cache:
+          paths:
+            - ~/.cache/pip
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+      - run:
+          name: Lint Code with Flake8
+          command: |
+            # Stop the build on syntax errors or undefined names
+            flake8 MyProject --count --select=E9,F63,F7,F82 --show-source --statistics
+            # exit-zero treats all errors as warnings
+            flake8 MyProject --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - run:
+          name: Run Django Tests
+          command: |
+            python MyProject/manage.py test bankapp
+
+  # ========================================================
+  # JOB 2: DOCKER BUILD & SMOKE TEST
+  # ========================================================
+  build-and-validate-docker:
+    machine:
+      image: ubuntu-2204:current
+    working_directory: ~/project/CCABank
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Build Docker Image Locally
+          command: |
+            docker build -t ccabank:local .
+      - run:
+          name: Start Docker Container (Smoke Test)
+          command: |
+            # Spin up container on port 8000 with SQLite fallback enabled
+            docker run -d --name ccabank_test -e USE_SQLITE=True -p 8000:8000 ccabank:local
+            echo "Waiting for Django server to bind..."
+            sleep 10
+      - run:
+          name: Run Smoke Test API Validation
+          command: |
+            # Call the homepage endpoint and check for 200 OK or 302 Redirect
+            RESPONSE_CODE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8000/bank/)
+            echo "Django responded with status code: $RESPONSE_CODE"
+            if [ "$RESPONSE_CODE" -ne 200 ] && [ "$RESPONSE_CODE" -ne 302 ]; then
+              echo "Smoke test validation failed! Received code: $RESPONSE_CODE"
+              docker logs ccabank_test
+              exit 1
+            fi
+            echo "Validation successful!"
+      - run:
+          name: Tear Down Container
+          when: always
+          command: |
+            docker stop ccabank_test || true
+            docker rm ccabank_test || true
+
+  # ========================================================
+  # JOB 3: PUBLISH TO DOCKER HUB REGISTRY
+  # ========================================================
+  push-to-registry:
+    docker:
+      - image: cimg/base:stable
+    working_directory: ~/project/CCABank
+    steps:
+      - checkout:
+          path: ~/project
+      - setup_remote_docker:
+          version: 20.10.24
+      - run:
+          name: Build and Push Docker Image
+          command: |
+            # Ensure Docker Hub credentials are set
+            if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+              echo "Error: DOCKERHUB_USERNAME or DOCKERHUB_TOKEN is not defined in CircleCI Environment Variables."
+              exit 1
+            fi
+            
+            # Log in to Docker Hub
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            
+            # Generate short SHA tag
+            SHORT_SHA=$(echo $CIRCLE_SHA1 | cut -c1-7)
+            
+            # Build and tag
+            docker build -t $DOCKERHUB_USERNAME/ccabank:latest -t $DOCKERHUB_USERNAME/ccabank:sha-$SHORT_SHA .
+            
+            # Push tags
+            docker push $DOCKERHUB_USERNAME/ccabank:latest
+            docker push $DOCKERHUB_USERNAME/ccabank:sha-$SHORT_SHA
+
+workflows:
+  version: 2
+  ccabank_pipeline:
+    jobs:
+      - lint-and-test:
+          filters:
+            branches:
+              only: /.*/
+      - build-and-validate-docker:
+          requires:
+            - lint-and-test
+          filters:
+            branches:
+              only: /.*/
+      - push-to-registry:
+          requires:
+            - build-and-validate-docker
+          filters:
+            branches:
+              only:
+                - main
+                - Main
