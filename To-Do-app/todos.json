@@ -9,4 +9,9 @@
         "title": "AI",
         "completed": true
     }
+    {
+        "id": 3,
+        "title": "SWE",
+        "completed": true
+    }
 ]
