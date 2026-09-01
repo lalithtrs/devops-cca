@@ -3,5 +3,10 @@
         "id": 1,
         "title": "DevOps",
         "completed": false
+    },
+    {
+        "id": 2,
+        "title": "AI",
+        "completed": true
     }
 ]
